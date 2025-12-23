@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conciliador SPED - Vale</title>
+    <link rel="icon" href="assets/logo-vale.png" type="image/png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <img src="assets/logo-vale.png" alt="Vale" class="logo-sidebar">
+            <button id="btn-collapse" title="Recolher Menu">
+                <span class="arrow-icon">«</span>
+            </button>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li>
+                <a href="#" id="btn-nav-dashboard">
+                    <span class="sidebar-icon">📊</span> 
+                    <span class="link-text">Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" id="btn-nav-historico">
+                    <span class="sidebar-icon">📁</span> 
+                    <span class="link-text">Análises Salvas</span>
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="profile-pic">SU</div>
+            <div class="profile-info">
+                <span class="profile-name">Usuário Vale</span>
+                <span class="profile-status"><span class="online-dot"></span>Online</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="content-wrapper">
+        <header class="top-bar">
+            <div class="header-left">
+                <button id="menu-toggle-btn">
+                    <span></span><span></span><span></span>
+                </button>
+                <img src="assets/logo-vale.png" alt="Vale" class="logo-top-bar">
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <span class="top-bar-title">Conciliação Fiscal Automatizada</span>
+                <button id="btn-imprimir" style="padding: 10px 25px; font-size: 0.9rem; background-color: #ffffff; color: var(--primary-green); border: 2px solid var(--primary-green); box-shadow: none;">
+                    🖨️ Imprimir / PDF
+                </button>
+            </div>
+        </header>
+        
+        <main class="content">
+            
+            <div id="view-dashboard">
+                <div class="card card-upload card-largo">
+                    <h2>Iniciar Nova Análise</h2>
+                    <div id="upload-area">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="file_sped">1. Arquivo SPED (.txt)</label>
+                                <input type="file" id="file_sped" name="file_sped" accept=".txt" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="file_livro">2. Livro Fiscal (.pdf)</label>
+                                <input type="file" id="file_livro" name="file_livro" accept=".pdf" required>
+                            </div>
+                        </div>
+
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="manual-mode-checkbox">
+                            <label for="manual-mode-checkbox">Modo Manual (Habilita inputs extras)</label>
+                        </div>
+
+                        <div id="manual-upload-area" class="hidden">
+                             <p style="color:#666; font-size:0.9rem;">(Funcionalidade futura: upload separado de Entradas/Saídas/Apuração)</p>
+                        </div>
+
+                        <div class="button-row">
+                            <button type="button" id="btn-processar-tudo">
+                                <span id="btn-text-processar">Processar Análise Completa</span>
+                                <div id="loader-processar" class="loader hidden"></div>
+                            </button>
+                        </div>
+                        <div id="status-message-geral" class="status" aria-live="polite"></div>
+                    </div>
+                </div>
+
+                <div id="area-resultados-compartilhada">
+                    <h2>Resultados da Conciliação de Totais</h2>
+                    <div class="dashboard-grid">
+                        <div id="card-entradas" class="card-resultado card-largo aguardando">
+                            <div class="card-header">
+                                <h3>Conciliação de Entradas</h3>
+                                <div id="resultado-entradas" class="status-box">Aguardando</div>
+                            </div>
+                            <div class="card-body card-body-apuracao">
+                                <div class="coluna">
+                                    <h4>Relatório SPED</h4>
+                                    <p>Total Operação: <span id="sped-e-total">--</span></p>
+                                    <p>Base de Cálculo ICMS: <span id="sped-e-bc">--</span></p>
+                                    <p>Total ICMS: <span id="sped-e-icms">--</span></p>
+                                </div>
+                                <div class="coluna">
+                                    <h4>Livro Fiscal</h4>
+                                    <p>Total Operação: <span id="livro-e-total">--</span></p>
+                                    <p>Base de Cálculo ICMS: <span id="livro-e-bc">--</span></p>
+                                    <p>Total ICMS: <span id="livro-e-icms">--</span></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="card-saidas" class="card-resultado card-largo aguardando">
+                              <div class="card-header">
+                                <h3>Conciliação de Saídas</h3>
+                                <div id="resultado-saidas" class="status-box">Aguardando</div>
+                            </div>
+                            <div class="card-body card-body-apuracao">
+                                <div class="coluna">
+                                    <h4>Relatório SPED</h4>
+                                    <p>Total Operação: <span id="sped-s-total">--</span></p>
+                                    <p>Base de Cálculo ICMS: <span id="sped-s-bc">--</span></p>
+                                    <p>Total ICMS: <span id="sped-s-icms">--</span></p>
+                                </div>
+                                <div class="coluna">
+                                    <h4>Livro Fiscal</h4>
+                                    <p>Total Operação: <span id="livro-s-total">--</span></p>
+                                    <p>Base de Cálculo ICMS: <span id="livro-s-bc">--</span></p>
+                                    <p>Total ICMS: <span id="livro-s-icms">--</span></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="card-apuracao" class="card-resultado card-largo aguardando">
+                            <div class="card-header"><h3>Apuração de ICMS (Operações Próprias)</h3></div>
+                            <div class="card-body card-body-apuracao">
+                                <div class="coluna">
+                                    <h4>Valores do Relatório SPED</h4>
+                                    <p>Total a Recolher: <span id="sped-a1">--</span></p>
+                                    <p>Saldo Credor: <span id="sped-a2">--</span></p>
+                                </div>
+                                <div class="coluna">
+                                    <h4>Valores do Livro Fiscal</h4>
+                                    <p>Código 013 (Livro): <span id="livro-a1">--</span></p>
+                                    <p>Código 014 (Livro): <span id="livro-a2">--</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2>Alertas de Análise</h2>
+                    <div class="dashboard-grid">
+                          <div id="card-alertas" class="card-resultado card-largo aguardando">
+                            <div class="card-header">
+                                <h3>Alertas de Validação (Blocos e Códigos)</h3>
+                                <div id="status-alertas" class="status-box">Aguardando</div>
+                            </div>
+                            <div class="card-body">
+                                <p>Verificações automáticas de integridade e cruzamento.</p>
+                                <ul id="lista-alertas-codigos"></ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h2>Conciliação de Ajustes Detalhados</h2>
+                    <div class="dashboard-grid">
+                        <div id="card-detalhe-e116" class="card-resultado card-largo aguardando">
+                            <div class="card-header">
+                                <h3>SPED E116 vs. Livro "Informações Complementares"</h3>
+                                <div id="status-detalhe-e116" class="status-box">Aguardando</div>
+                            </div>
+                            <div class="card-body card-body-apuracao">
+                                 <div class="coluna">
+                                    <h4>SPED (.txt)</h4>
+                                    <p>Soma dos Registros |E116|: <span id="sped-e116-soma">--</span></p>
+                                </div>
+                               <div class="coluna">
+                                    <h4>Livro Fiscal (.pdf)</h4>
+                                    <p>Soma "Informações Complementares": <span id="livro-infcomp-soma">--</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="card-e110-destaque" class="card-resultado card-largo aguardando hidden" style="margin-top: 50px; margin-bottom: 40px;">
+                        <div class="card-header">
+                            <h3>Resumo da Apuração do ICMS (Registro E110)</h3>
+                            <div id="status-e110" class="status-box">Calculado</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="grid-e110">
+                                <div class="grupo-e110">
+                                    <h4 class="titulo-grupo-e110">Débitos e Saídas</h4>
+                                    <div class="item-e110"><span class="label">Total dos Débitos:</span><span class="valor valor-debito" id="e110-vl-tot-debitos">--</span></div>
+                                    <div class="item-e110"><span class="label">Ajustes a Débito:</span><span class="valor" id="e110-vl-aj-debitos">--</span></div>
+                                    <div class="item-e110"><span class="label">Total Aj. Débito:</span><span class="valor" id="e110-vl-tot-aj-debitos">--</span></div>
+                                    <div class="item-e110"><span class="label">Estorno de Créditos:</span><span class="valor" id="e110-vl-estornos-cred">--</span></div>
+                                </div>
+
+                                <div class="grupo-e110">
+                                    <h4 class="titulo-grupo-e110">Créditos e Entradas</h4>
+                                    <div class="item-e110"><span class="label">Total dos Créditos:</span><span class="valor valor-credito" id="e110-vl-tot-creditos">--</span></div>
+                                    <div class="item-e110"><span class="label">Ajustes a Crédito:</span><span class="valor" id="e110-vl-aj-creditos">--</span></div>
+                                    <div class="item-e110"><span class="label">Total Aj. Crédito:</span><span class="valor" id="e110-vl-tot-aj-creditos">--</span></div>
+                                    <div class="item-e110"><span class="label">Estorno de Débitos:</span><span class="valor" id="e110-vl-estornos-deb">--</span></div>
+                                    <div class="item-e110"><span class="label">Saldo Credor Anterior:</span><span class="valor" id="e110-vl-sld-anterior">--</span></div>
+                                </div>
+
+                                <div class="grupo-e110 destaque-final">
+                                    <h4 class="titulo-grupo-e110">Resultado da Apuração</h4>
+                                    <div class="item-e110"><span class="label">Saldo Devedor (A Pagar):</span><span class="valor valor-pagar" id="e110-vl-sld-devedor">--</span></div>
+                                    <div class="item-e110"><span class="label">Deduções:</span><span class="valor" id="e110-vl-deducoes">--</span></div>
+                                    <div class="item-e110 big-total"><span class="label">ICMS a Recolher:</span><span class="valor" id="e110-vl-recolher">--</span></div>
+                                    <div class="item-e110 big-total-cred"><span class="label">Saldo a Transportar:</span><span class="valor" id="e110-vl-sld-transportar">--</span></div>
+                                    <div class="item-e110" style="margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 10px;"><span class="label">Extra Apuração:</span><span class="valor" id="e110-vl-extra">--</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Análise Manual (Bloco E vs. Detalhamento)</h2>
+                <div class="dashboard-grid">
+                    <div id="card-detalhamento" class="card-resultado card-largo aguardando">
+                        <div class="card-header">
+                            <h3>Bloco E (.txt) vs. Totais por Código (.pdf)</h3>
+                            <div id="status-detalhamento" class="status-box">Aguardando</div>
+                        </div>
+                        <div class="card-body card-body-detalhamento">
+                            <div class="coluna-detalhe">
+                                <h4>Bloco E extraído do SPED (.txt)</h4>
+                                <div class="bloco-e-filtros" id="bloco-e-filtros">
+                                    <button class="filtro-btn active" data-filtro="todos">Todos</button>
+                                    <button class="filtro-btn" data-filtro="reg-e111">E111</button>
+                                    <button class="filtro-btn" data-filtro="reg-e113">E113</button>
+                                    <button class="filtro-btn" data-filtro="reg-e116">E116</button>
+                                </div>
+                                <div class="tabela-container" id="bloco-e-table-wrapper">
+                                    <table id="bloco-e-table"><tbody id="bloco-e-table-body"></tbody></table>
+                                </div>
+                            </div>
+                            <div class="coluna-detalhe">
+                                <h4>Totais por Código do Livro (.pdf)</h4>
+                                 <div class="tabela-container">
+                                    <table id="detalhamento-table"><tbody id="detalhamento-table-body"></tbody></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> 
+
+            <div id="view-historico" class="hidden">
+                <div class="card card-largo">
+                    <h2>Histórico de Análises Salvas</h2>
+                    <p>Clique em uma análise para carregar os resultados.</p>
+                    <div class="tabela-container">
+                        <table id="tabela-historico">
+                            <thead>
+                                <tr><th>Data / Hora</th><th>Arquivo</th><th>Status Geral</th><th>Ação</th></tr>
+                            </thead>
+                            <tbody id="tabela-historico-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div> 
+
+    <script src="app.js"></script>
+</body>
+</html>
