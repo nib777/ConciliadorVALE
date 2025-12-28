@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const filtroBtns = document.querySelectorAll('.filtro-btn');
     filtroBtns.forEach(btn => { btn.addEventListener('click', () => { filtroBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); const filtro = btn.getAttribute('data-filtro'); document.querySelectorAll('#bloco-e-table-body tr').forEach(tr => { if (filtro === 'todos') tr.style.display = ''; else tr.style.display = tr.classList.contains(filtro) ? '' : 'none'; }); }); });
 
-    // --- PROCESSAMENTO (CORRIGIDO) ---
+    //PROCESSAMENTO
     const btnProcessar = document.getElementById("btn-processar-tudo");
     if (btnProcessar) {
         btnProcessar.addEventListener("click", async (e) => {
@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
             formData.append("file_sped", fileSped);
             if(fileLivro) formData.append("file_pdf", fileLivro);
             try {
-                // AQUI ESTAVA O ERRO: Agora usa caminho relativo
+                
                 const response = await fetch('/upload-e-processar/', { method: 'POST', body: formData });
                 if(!response.ok) throw new Error(await response.text());
                 const data = await response.json();
@@ -100,3 +100,4 @@ function preencherDashboard(res) {
 }
 
 function limparResultados() { document.querySelectorAll(".card-resultado").forEach(c=>{ if(c.id!=="card-extracao-avancada")c.className="card-resultado aguardando"; }); document.querySelectorAll('span[id^="sped-"], span[id^="livro-"], span[id^="e110-"]').forEach(s=>s.textContent="--"); const t=document.getElementById("bloco-e-table-body"); if(t)t.innerHTML=""; const td=document.getElementById("detalhamento-table-body"); if(td)td.innerHTML=""; }
+
