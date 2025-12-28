@@ -6,11 +6,7 @@ from decimal import Decimal, InvalidOperation
 from collections import defaultdict
 from werkzeug.utils import secure_filename
 
-# ==============================================================================
-# PARTE 1: SEU CÓDIGO DE LEITURA DE PDF (INTEGRADO)
-# ==============================================================================
-
-# --- CONFIGURAÇÕES GLOBAIS ---
+#CONFIGURAÇÕES GLOBAIS
 MARCADOR_SECAO_APURACAO_LIVRO = "Apuração do Saldo"
 MARCADOR_PARADA_LIVRO = "Observações"
 CODIGOS_APURACAO_LIVRO = ["013", "014"]
@@ -22,7 +18,7 @@ MARCADOR_PAGINA_SAIDAS = "SAÍDAS"
 CHAVES_COMPLETAS_ES = ["total_operacao", "base_de_calculo_icms", "total_icms", "base_de_calculo_icms_st", "total_icms_st", "total_ipi"]
 CHAVES_LAYOUT_HORIZONTAL_SAIDAS = ["total_operacao", "base_de_calculo_icms", "total_icms", "isentas_nao_trib", "outras"]
 
-# --- FUNÇÕES UTILITÁRIAS ---
+#FUNÇÕES UTILITÁRIAS
 def limpar_e_converter_numero(texto_numero):
     if not texto_numero or "," not in texto_numero: return 0.0
     try:
@@ -37,7 +33,7 @@ def _limpar_valor_decimal(valor_str):
         return Decimal(re.sub(r"[^0-9\.]", "", v))
     except: return Decimal('0.0')
 
-# --- BUSCAS ---
+#BUSCAS
 def encontrar_e_extrair_totais_es(caminho_pdf, marcador_pagina, etiqueta_valor, chaves):
     if not caminho_pdf or not os.path.exists(caminho_pdf): return {}
     valores = {}
@@ -131,16 +127,14 @@ def processar_livro_completo(caminho_pdf, lista_codigos_sped=[]):
         "detalhamento_codigos": {k: f"{v:.2f}" for k,v in analisar_detalhamento_por_codigo(caminho_pdf).items()},
         "codigos_ausentes": verificar_codigos_no_livro(caminho_pdf, lista_codigos_sped)
     }
-
-# ==============================================================================
-# PARTE 2: LEITURA DO SPED E INTEGRAÇÃO (A COLA DO SISTEMA)
-# ==============================================================================
+    
+#PARTE 2: LEITURA DO SPED E INTEGRAÇÃO
 
 def formata_valor(valor):
     """Converte float/string para visual R$ 0,00"""
     try:
         if isinstance(valor, str):
-            # Se ja vier formatado do seu código (ex: "1.000,00"), só adiciona R$
+            # Se ja vier formatado, só adiciona R$
             if "," in valor and "R$" not in valor: return f"R$ {valor}"
             return valor
         return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
@@ -155,7 +149,7 @@ def parse_valor_sped(txt):
         return 0.0
 
 def processar_pdf_e_sped(caminho_sped, caminho_pdf):
-    # Estrutura JSON Final
+    #Estrutura JSON Final
     resultado = {
         "entradas": {"sped": {}, "livro": {}, "status": "Aguardando"},
         "saidas": {"sped": {}, "livro": {}, "status": "Aguardando"},
@@ -227,14 +221,14 @@ def processar_pdf_e_sped(caminho_sped, caminho_pdf):
     except Exception as e:
         resultado["bloco_e_texto"] = f"Erro SPED: {e}"
 
-    # 2. PROCESSAR PDF (USANDO SUA LÓGICA NOVA)
+    # 2. PROCESSAR PDF
     if caminho_pdf:
         try:
-            # Chama a SUA função mestre
+            #Chama a função mestre
             dados_pdf = processar_livro_completo(caminho_pdf, lista_codigos_para_checar)
             
-            # Mapeia o resultado do seu código para o JSON do Dashboard
-            # Entradas
+            #Mapeia o resultado do código para o JSON do Dashboard
+            #Entradas
             ent_pdf = dados_pdf.get("entradas", {})
             resultado["entradas"]["livro"] = {
                 "total_operacao": formata_valor(ent_pdf.get("total_operacao", 0)),
@@ -242,7 +236,7 @@ def processar_pdf_e_sped(caminho_sped, caminho_pdf):
                 "total_icms": formata_valor(ent_pdf.get("total_icms", 0))
             }
             
-            # Saidas
+            #Saidas
             sai_pdf = dados_pdf.get("saidas", {})
             resultado["saidas"]["livro"] = {
                 "total_operacao": formata_valor(sai_pdf.get("total_operacao", 0)),
@@ -250,29 +244,29 @@ def processar_pdf_e_sped(caminho_sped, caminho_pdf):
                 "total_icms": formata_valor(sai_pdf.get("total_icms", 0))
             }
 
-            # Apuração (013 e 014)
+            #Apuração (013 e 014)
             apu_pdf = dados_pdf.get("apuracao", {})
             resultado["apuracao"]["livro_valores"] = {
                 "013": formata_valor(apu_pdf.get("013", 0)),
                 "014": formata_valor(apu_pdf.get("014", 0))
             }
 
-            # Outros dados avançados
+            #Outros dados avançados
             resultado["detalhamento_codigos"] = dados_pdf.get("detalhamento_codigos", {})
             resultado["codigos_ausentes_livro"] = dados_pdf.get("codigos_ausentes", [])
             resultado["soma_livro_inf_comp"] = formata_valor(dados_pdf.get("soma_inf_complementares", 0))
 
-            # Comparação de Status
+            #Comparação de Status
             def get_float(v):
                 if isinstance(v, str): return limpar_e_converter_numero(v)
                 return float(v)
             
-            # Compara valor total entrada
+            #Compara valor total entrada
             val_sped = parse_valor_sped(str(ent_tot))
             val_livro = get_float(ent_pdf.get("total_operacao", "0"))
             resultado["entradas"]["status"] = "OK" if abs(val_sped - val_livro) < 1.0 else "Divergente"
 
-            # Compara valor total saida
+            #Compara valor total saida
             val_sped_s = parse_valor_sped(str(sai_tot))
             val_livro_s = get_float(sai_pdf.get("total_operacao", "0"))
             resultado["saidas"]["status"] = "OK" if abs(val_sped_s - val_livro_s) < 1.0 else "Divergente"
@@ -281,3 +275,4 @@ def processar_pdf_e_sped(caminho_sped, caminho_pdf):
             print(f"Erro ao processar PDF com lógica nova: {e}")
 
     return resultado
+
