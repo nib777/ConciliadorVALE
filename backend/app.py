@@ -5,7 +5,7 @@ import hashlib
 from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory, session, redirect
 from flask_cors import CORS
-import threading  # Adicionado para a Fila
+import threading  
 import custom_pdf 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -13,16 +13,16 @@ template_dir = os.path.join(basedir, '..', 'frontend')
 history_dir = os.path.join(basedir, 'historico_json')
 
 app = Flask(__name__, static_folder=template_dir, static_url_path='')
-app.secret_key = 'segredo_da_vale_conciliador_2025'  # Adicionado para o Login
+app.secret_key = 'segredo_da_vale_conciliador_2025'  #Login
 CORS(app)
 
-# --- CONFIGURAÇÕES NOVAS ---
+#CONFIGURAÇÕES NOVAS
 SENHA_DO_SISTEMA = "vale123"
 processamento_lock = threading.Lock() # O Cadeado da Fila
 
 if not os.path.exists(history_dir): os.makedirs(history_dir)
 
-# --- SUAS FUNÇÕES ORIGINAIS (INTACTAS) ---
+#FUNÇÕES
 def conv_num(v):
     try: return float(v.replace('.', '').replace(',', '.'))
     except: return 0.0
@@ -106,7 +106,7 @@ def processar_sped_txt(path):
         return ent, sai, apu, soma_e116, txt_e, list(codes)
     except: return None
 
-# --- NOVAS FUNÇÕES DE LOGIN ---
+#FUNÇÕES DE LOGIN
 def esta_logado():
     return session.get('logado') == True
 
@@ -124,7 +124,7 @@ def logout():
     session.pop('logado', None)
     return redirect('/')
 
-# --- ROTAS (ADAPTADAS COM LOGIN) ---
+#ROTAS
 
 @app.route('/')
 def index():
@@ -133,7 +133,7 @@ def index():
 
 @app.route('/<path:path>')
 def serve_static(path):
-    # Libera assets para a tela de login
+    #assets tela de login
     if not esta_logado() and path not in ['login.html', 'style.css', 'app.js', 'assets/logo-vale.png']:
          if path == 'index.html': return send_from_directory(template_dir, 'login.html')
     return send_from_directory(template_dir, path)
@@ -172,7 +172,7 @@ def del_hist(f):
 def proc():
     if not esta_logado(): return jsonify({"detail":"Acesso negado"}), 401
     
-    # AQUI ENTRA A FILA (LOCK)
+    #FILA (LOCK)
     with processamento_lock:
         if 'file_sped' not in request.files: return jsonify({"detail":"Falta SPED"}), 400
         fs = request.files['file_sped']
@@ -186,7 +186,7 @@ def proc():
         if fp: fp.save(pp)
 
         try:
-            # SUA LÓGICA DE PROCESSAMENTO ORIGINAL
+            #LÓGICA DE PROCESSAMENTO
             dt = processar_sped_txt(pt)
             if not dt: raise Exception("Erro leitura TXT")
             ent, sai, apu, e116, txt, cods = dt
@@ -216,3 +216,4 @@ def proc():
             if os.path.exists(pp): os.remove(pp)
 
 if __name__ == '__main__': app.run(host='0.0.0.0', port=5000, debug=True)
+
